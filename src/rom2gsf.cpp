@@ -74,7 +74,7 @@ int doexe2snsf(const char *from, const char *to) {
 //  fprintf(stdout,"uncompressed: %ld bytes\n",ucl);fflush(stdout);
 
   cl = sizeof(compbuf);
-  r=compress2(compbuf,&cl,uncompbuf,ucl+12,9);
+  r=compress2(compbuf,&cl,uncompbuf,ucl+8,9);
   if(r!=Z_OK){fprintf(stderr,"zlib compress2() failed (%d)\n", r);return 1;}
 
 //  fprintf(stdout,"compressed: %ld bytes\n",cl);fflush(stdout);
