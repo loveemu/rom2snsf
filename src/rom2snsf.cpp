@@ -33,7 +33,10 @@
 #define APP_VER     "[2015-04-02]"
 #define APP_URL     "http://github.com/loveemu/rom2snsf"
 
-#define SNSF_EXE_HEADER_SIZE	8
+#define SNSF_PSF_VERSION        0x23
+#define SNSF_EXE_HEADER_SIZE    8
+
+#define SNES_ROM_MAX_SIZE       0x800000
 
 static void writeInt(uint8_t * buf, uint32_t value)
 {
@@ -52,7 +55,7 @@ bool rom2snsf(const char * rom_path, const char * snsf_path, uint32_t load_offse
 	}
 
 	size_t rom_size = off_rom_size;
-	if (rom_size > 0x800000) {
+	if (rom_size > SNES_ROM_MAX_SIZE) {
 		fprintf(stderr, "Error: File too large \"%s\"\n", rom_path);
 		return false;
 	}
@@ -85,7 +88,7 @@ bool rom2snsf(const char * rom_path, const char * snsf_path, uint32_t load_offse
 	zlib_exe.write(exe, SNSF_EXE_HEADER_SIZE + rom_size);
 
 	std::map<std::string, std::string> tags;
-	if (!PSFFile::save(snsf_path, 0x23, NULL, 0, zlib_exe, tags)) {
+	if (!PSFFile::save(snsf_path, SNSF_PSF_VERSION, NULL, 0, zlib_exe, tags)) {
 		fprintf(stderr, "Error: File write error \"%s\"\n", snsf_path);
 		free(exe);
 		return false;
@@ -143,12 +146,18 @@ int main(int argc, char *argv[])
 			}
 
 			longval = strtol(argv[argi + 1], &endptr, 16);
-			if (*endptr != '\0' || errno == ERANGE)
+			if (*endptr != '\0' || errno == ERANGE || longval < 0)
 			{
 				fprintf(stderr, "Error: Number format error \"%s\"\n", argv[argi + 1]);
 				return EXIT_FAILURE;
 			}
 			load_offset = longval;
+
+			if (load_offset >= SNES_ROM_MAX_SIZE) {
+				fprintf(stderr, "Error: Load offset too large 0x%08X\n", load_offset);
+				return EXIT_FAILURE;
+			}
+
 			argi++;
 		}
 		else {
