@@ -20,3 +20,6 @@ Syntax: `rom2snsf <SNES Files>`
 
 `--load [offset]`
   : Load offset of SNES executable
+
+`--lib [libname.snsflib]`
+  : Specify snsflib library name

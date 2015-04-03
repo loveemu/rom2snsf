@@ -30,7 +30,7 @@
 #endif
 
 #define APP_NAME    "rom2snsf"
-#define APP_VER     "[2015-04-02]"
+#define APP_VER     "[2015-04-04]"
 #define APP_URL     "http://github.com/loveemu/rom2snsf"
 
 #define SNSF_PSF_VERSION        0x23
@@ -46,7 +46,7 @@ static void writeInt(uint8_t * buf, uint32_t value)
 	buf[3] = (value >> 24) & 0xff;
 }
 
-bool rom2snsf(const char * rom_path, const char * snsf_path, uint32_t load_offset)
+bool rom2snsf(const char * rom_path, const char * snsf_path, uint32_t load_offset, const std::map<std::string, std::string> & tags)
 {
 	off_t off_rom_size = path_getfilesize(rom_path);
 	if (off_rom_size == -1) {
@@ -87,7 +87,6 @@ bool rom2snsf(const char * rom_path, const char * snsf_path, uint32_t load_offse
 	ZlibWriter zlib_exe(Z_BEST_COMPRESSION);
 	zlib_exe.write(exe, SNSF_EXE_HEADER_SIZE + rom_size);
 
-	std::map<std::string, std::string> tags;
 	if (!PSFFile::save(snsf_path, SNSF_PSF_VERSION, NULL, 0, zlib_exe, tags)) {
 		fprintf(stderr, "Error: File write error \"%s\"\n", snsf_path);
 		free(exe);
@@ -118,6 +117,9 @@ static void usage(const char * progname)
 	printf("`--load [offset]`\n");
 	printf("  : Load offset of SNES executable\n");
 	printf("\n");
+	printf("`--lib [libname.snsflib]`\n");
+	printf("  : Specify snsflib library name\n");
+	printf("\n");
 }
 
 int main(int argc, char *argv[])
@@ -132,6 +134,7 @@ int main(int argc, char *argv[])
 
 	uint32_t load_offset = 0;
 	char snsf_path[PATH_MAX];
+	char libname[PATH_MAX] = { '\0' };
 
 	int argi = 1;
 	while (argi < argc && argv[argi][0] == '-') {
@@ -139,7 +142,7 @@ int main(int argc, char *argv[])
 			usage(argv[0]);
 			return EXIT_FAILURE;
 		}
-		if (strcmp(argv[argi], "--load") == 0) {
+		else if (strcmp(argv[argi], "--load") == 0) {
 			if (argi + 1 >= argc) {
 				fprintf(stderr, "Error: Too few arguments for \"%s\"\n", argv[argi]);
 				return EXIT_FAILURE;
@@ -157,6 +160,16 @@ int main(int argc, char *argv[])
 				fprintf(stderr, "Error: Load offset too large 0x%08X\n", load_offset);
 				return EXIT_FAILURE;
 			}
+
+			argi++;
+		}
+		else if (strcmp(argv[argi], "--lib") == 0) {
+			if (argi + 1 >= argc) {
+				fprintf(stderr, "Error: Too few arguments for \"%s\"\n", argv[argi]);
+				return EXIT_FAILURE;
+			}
+
+			strcpy(libname, argv[argi + 1]);
 
 			argi++;
 		}
@@ -179,12 +192,20 @@ int main(int argc, char *argv[])
 		const char * rom_ext = path_findext(rom_path);
 
 		strcpy(snsf_path, rom_path);
-		if (strcasecmp(rom_ext, ".smc") == 0) {
-			path_stripext(snsf_path);
+		path_stripext(snsf_path);
+		if (strcmp(libname, "") != 0) {
+			strcat(snsf_path, ".minisnsf");
 		}
-		strcat(snsf_path, ".snsf");
+		else {
+			strcat(snsf_path, ".snsf");
+		}
 
-		if (!rom2snsf(rom_path, snsf_path, load_offset)) {
+		std::map<std::string, std::string> tags;
+		if (strcmp(libname, "") != 0) {
+			tags["_lib"] = libname;
+		}
+
+		if (!rom2snsf(rom_path, snsf_path, load_offset, tags)) {
 			num_error++;
 		}
 
