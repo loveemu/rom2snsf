@@ -23,3 +23,6 @@ Syntax: `rom2snsf <SNES Files>`
 
 `--lib [libname.snsflib]`
   : Specify snsflib library name
+
+`--psfby [name]` (aka. `--snsfby`)
+  : Set creator name of SNSF

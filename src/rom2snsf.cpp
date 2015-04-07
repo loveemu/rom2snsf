@@ -30,7 +30,7 @@
 #endif
 
 #define APP_NAME    "rom2snsf"
-#define APP_VER     "[2015-04-04]"
+#define APP_VER     "[2015-04-07]"
 #define APP_URL     "http://github.com/loveemu/rom2snsf"
 
 #define SNSF_PSF_VERSION        0x23
@@ -120,6 +120,9 @@ static void usage(const char * progname)
 	printf("`--lib [libname.snsflib]`\n");
 	printf("  : Specify snsflib library name\n");
 	printf("\n");
+	printf("`--psfby [name]` (aka. `--snsfby`)\n");
+	printf("  : Set creator name of SNSF\n");
+	printf("\n");
 }
 
 int main(int argc, char *argv[])
@@ -135,6 +138,8 @@ int main(int argc, char *argv[])
 	uint32_t load_offset = 0;
 	char snsf_path[PATH_MAX];
 	char libname[PATH_MAX] = { '\0' };
+
+	char *psfby = NULL;
 
 	int argi = 1;
 	while (argi < argc && argv[argi][0] == '-') {
@@ -173,6 +178,16 @@ int main(int argc, char *argv[])
 
 			argi++;
 		}
+		else if (strcmp(argv[argi], "--psfby") == 0 || strcmp(argv[argi], "--snsfby") == 0) {
+			if (argi + 1 >= argc) {
+				fprintf(stderr, "Error: Too few arguments for \"%s\"\n", argv[argi]);
+				return EXIT_FAILURE;
+			}
+
+			psfby = argv[argi + 1];
+
+			argi++;
+		}
 		else {
 			fprintf(stderr, "Error: Unknown option \"%s\"\n", argv[argi]);
 			return EXIT_FAILURE;
@@ -203,6 +218,10 @@ int main(int argc, char *argv[])
 		std::map<std::string, std::string> tags;
 		if (strcmp(libname, "") != 0) {
 			tags["_lib"] = libname;
+		}
+
+		if (psfby != NULL && strcmp(psfby, "") != 0) {
+			tags["snsfby"] = psfby;
 		}
 
 		if (!rom2snsf(rom_path, snsf_path, load_offset, tags)) {
