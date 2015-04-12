@@ -30,7 +30,7 @@
 #endif
 
 #define APP_NAME    "rom2snsf"
-#define APP_VER     "[2015-04-07]"
+#define APP_VER     "[2015-04-12]"
 #define APP_URL     "http://github.com/loveemu/rom2snsf"
 
 #define SNSF_PSF_VERSION        0x23
