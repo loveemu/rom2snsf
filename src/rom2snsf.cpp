@@ -30,7 +30,7 @@
 #endif
 
 #define APP_NAME    "rom2snsf"
-#define APP_VER     "[2015-04-12]"
+#define APP_VER     "[2017-08-11]"
 #define APP_URL     "http://github.com/loveemu/rom2snsf"
 
 #define SNSF_PSF_VERSION        0x23
@@ -114,6 +114,9 @@ static void usage(const char * progname)
 	printf("`--help`\n");
 	printf("  : Show help\n");
 	printf("\n");
+	printf("`-o [output.snsf]`\n");
+	printf("  : Specify output filename\n");
+	printf("\n");
 	printf("`--load [offset]`\n");
 	printf("  : Load offset of SNES executable\n");
 	printf("\n");
@@ -136,7 +139,7 @@ int main(int argc, char *argv[])
 	char *endptr = NULL;
 
 	uint32_t load_offset = 0;
-	char snsf_path[PATH_MAX];
+	char snsf_path[PATH_MAX] = { '\0' };
 	char libname[PATH_MAX] = { '\0' };
 
 	char *psfby = NULL;
@@ -146,6 +149,16 @@ int main(int argc, char *argv[])
 		if (strcmp(argv[argi], "--help") == 0) {
 			usage(argv[0]);
 			return EXIT_FAILURE;
+		}
+		else if (strcmp(argv[argi], "-o") == 0) {
+			if (argi + 1 >= argc) {
+				fprintf(stderr, "Error: Too few arguments for \"%s\"\n", argv[argi]);
+				return EXIT_FAILURE;
+			}
+
+			strcpy(snsf_path, argv[argi + 1]);
+
+			argi++;
 		}
 		else if (strcmp(argv[argi], "--load") == 0) {
 			if (argi + 1 >= argc) {
@@ -200,19 +213,25 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Error: Too few arguments\n");
 		return EXIT_FAILURE;
 	}
+	if (argnum > 1 && strcmp(snsf_path, "") != 0) {
+		fprintf(stderr, "Error: Unable to specify output filename for multiple inputs\n");
+		return EXIT_FAILURE;
+	}
 
 	int num_error = 0;
 	for (; argi < argc; argi++) {
 		const char * rom_path = argv[argi];
 		const char * rom_ext = path_findext(rom_path);
 
-		strcpy(snsf_path, rom_path);
-		path_stripext(snsf_path);
-		if (strcmp(libname, "") != 0) {
-			strcat(snsf_path, ".minisnsf");
-		}
-		else {
-			strcat(snsf_path, ".snsf");
+		if (strcmp(snsf_path, "") == 0) {
+			strcpy(snsf_path, rom_path);
+			path_stripext(snsf_path);
+			if (strcmp(libname, "") != 0) {
+				strcat(snsf_path, ".minisnsf");
+			}
+			else {
+				strcat(snsf_path, ".snsf");
+			}
 		}
 
 		std::map<std::string, std::string> tags;
