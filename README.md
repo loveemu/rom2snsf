@@ -15,8 +15,11 @@ Syntax: `rom2snsf <SNES Files>`
 
 ### Options ###
 
---help
+`--help`
   : Show help
+
+`-o [output.snsf]`
+  : Specify output filename
 
 `--load [offset]`
   : Load offset of SNES executable
